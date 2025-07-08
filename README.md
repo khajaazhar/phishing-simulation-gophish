@@ -176,7 +176,7 @@ This project demonstrates a complete setup and deployment of a phishing simulati
 
 ## Additional Documentation
 
-For a more detailed walkthrough, [view the full PDF guide](./Gophish_Simulation_Documentation.pdf).
+For a more detailed walkthrough, [view the full PDF guide](https://github.com/khajaazhar/phishing-simulation-gophish/raw/main/Gophish_Simulation_Documentation.pdf).
 
 ---
 ## Disclaimer
