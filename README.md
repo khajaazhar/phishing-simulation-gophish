@@ -174,6 +174,11 @@ This project demonstrates a complete setup and deployment of a phishing simulati
 
 ---
 
+## Additional Documentation
+
+For a more detailed walkthrough, [view the full PDF guide](./Gophish_Simulation_Documentation.pdf).
+
+---
 ## Disclaimer
 
 This project was built for educational and authorized testing purposes only. Do not use phishing tools without explicit legal permission.
