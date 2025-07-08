@@ -1,59 +1,81 @@
 # Phishing-Simulation-GoPhish
-This project demonstrates a complete setup and deployment of a phishing simulation campaign using [GoPhish](https://getgophish.com/), an open-source phishing framework. The campaign was hosted on an AWS EC2 instance, using Mailgun for SMTP email delivery, and included custom hardening techniques to evade detection by security tools.
+
+This project demonstrates a complete setup and deployment of a phishing simulation campaign using [GoPhish](https://getgophish.com/), an open-source phishing framework. The campaign was hosted on an AWS EC2 instance, with Mailgun configured for SMTP email delivery, and included multiple hardening techniques to evade detection by modern email security solutions.
 
 ---
 
-## Tools & Technologies Used
+## Tools and Technologies Used
 
-- **GoPhish** (Phishing framework)
-- **AWS EC2** (Ubuntu Server)
-- **GoLang** (To build GoPhish)
-- **Mailgun** (SMTP Email Service)
-- **Certbot** (TLS Certificate for HTTPS)
-- **DNS Configuration** (TXT, MX, CNAME for Mailgun)
-- **Custom Domain** (Registered & linked to EC2)
-- **Temporary Mail Tools** (for testing)
+- GoPhish (Phishing framework)
+- AWS EC2 (Ubuntu Server)
+- GoLang (For building GoPhish from source)
+- Mailgun (SMTP email service)
+- Certbot (TLS certificate generation)
+- DNS configuration (TXT, MX, CNAME records)
+- Custom domain (linked to EC2 instance)
+- Temporary email tools (for safe testing)
 
 ---
 
 ## Setup Process
 
-###  EC2 Setup & GoPhish Installation
+### 1. Launch and Connect to EC2
 
-1. **Launch EC2 Instance** with Ubuntu.
-2. Connect via **SSH** (Ensure `.pem` file permissions are secure).
-3. Update system:
-   
-   sudo apt update && sudo apt upgrade -y
+- Create an Ubuntu EC2 instance on AWS.
+- Ensure `.pem` file has correct permissions.
+- Connect via SSH:
+  
+  ssh -i gophish.pem ubuntu@<your-ec2-public-ip>
+2. System Preparation
+Update the system:
+
+
+sudo apt update && sudo apt upgrade -y
 Install GoLang:
 
-sudo apt install golang-go -y
 
-Clone & build GoPhish:
+sudo apt install golang-go -y
+3. Install GoPhish
+Clone the GoPhish repository and build:
+
 
 git clone https://github.com/gophish/gophish.git
 cd gophish
 go build
 
-📬 Mailgun SMTP Setup
-Register a domain and configure DNS (TXT, MX, CNAME) records.
+4. Configure Mailgun
+Register a domain.
 
-Create SMTP credentials and obtain server info.
+Add DNS records (TXT, MX, CNAME) provided by Mailgun.
 
-Update config.json in GoPhish with Mailgun SMTP and set "0.0.0.0" for accessibility.
+Create an SMTP user and retrieve the SMTP host, username, and password.
 
-🔐 TLS Certificate
-Install Certbot and generate a certificate:
+Update config.json:
+
+Change 127.0.0.1 to 0.0.0.0 to allow external access.
+
+Add SMTP credentials in the sending profile via the GoPhish dashboard.
+
+5. Generate TLS Certificate
+Install Certbot:
+
 
 sudo apt install certbot
-sudo certbot certonly --manual --preferred-challenges dns -d <yourdomain>
-Add certificate paths in config.json and update port to 443 with TLS enabled.
+Generate certificate:
 
-🔄 Automation via Systemd
-Create a systemd service for GoPhish:
+
+sudo certbot certonly --manual --preferred-challenges dns -d <yourdomain>
+Add the generated certificate paths to config.json under the phish_server section.
+
+Update the port to 443 and set "use_tls": true.
+
+6. Create a Systemd Service
+Create and edit the service file:
+
 
 sudo nano /etc/systemd/system/gophish.service
-Add the following:
+Paste the following:
+
 
 [Unit]
 Description=GoPhish Service
@@ -63,43 +85,64 @@ WorkingDirectory=/home/ubuntu/gophish/
 ExecStart=/home/ubuntu/gophish/gophish
 [Install]
 WantedBy=multi-user.target
-Enable & start service:
+
+Enable and start the service:
+
 
 sudo systemctl enable gophish.service
 sudo systemctl start gophish.service
+Launching the Phishing Campaign
+Access the GoPhish admin panel at:
 
-Phishing Campaign Steps
-Access GoPhish dashboard at https://<public-ip>:3333
+https://<your-ec2-public-ip>:3333
+Create the following components:
 
-Create:
+Email Templates with {{.URL}} for phishing links.
 
-Email Templates (with embedded phishing links)
+Landing Pages with credential capture + redirect (e.g., to google.com).
 
-Landing Pages (with credential capture + redirect)
+User Groups containing target email addresses.
 
-User Groups (targets with emails)
+Sending Profiles using Mailgun SMTP credentials.
 
-Sending Profiles (SMTP settings)
+Launch the campaign and monitor:
 
-Launch campaign and monitor dashboard for:
+Email deliveries
 
-Email sent
+Link clicks
 
-Link clicked
+Credential submissions
 
-Data submitted
+Hardening the Phishing Server
+To reduce the likelihood of detection by security tools, the following steps were taken:
 
-🛡️ Hardening Techniques
-To reduce detection by mail filters and security tools:
-
-Replaced GoPhish headers:
+Header Obfuscation
+Replace GoPhish-specific email headers:
 
 
-sed -i.bak 's/X-Gophish-Contact/X-Contact/g' . -type f
-sed -i.bak 's/X-Gophish-Signature/X-Signature/g' . -type f
-Renamed identifiers:
+sudo find . -type f -exec sed -i.bak 's/X-Gophish-Contact/X-Contact/g' {} +
+sudo find . -type f -exec sed -i.bak 's/X-Gophish-Signature/X-Signature/g' {} +
+Identifier Renaming
+In models/campaign.go, change:
 
-const RecipientParameter = "id" // instead of "rid"
-Updated server name from "gophish" to "IGNORE" in config files.
 
-Recompiled and restarted the service.
+const RecipientParameter = "id"
+(originally "rid")
+
+In config/config.go, change:
+
+Server name "gophish" → "IGNORE"
+
+Rebuild and Restart
+Recompile the GoPhish binary:
+
+
+go build
+Restart the service:
+
+
+sudo systemctl restart gophish.service
+Add Custom Headers (Optional)
+Add realistic headers in the GoPhish sending profile to blend in with real emails.
+
+
