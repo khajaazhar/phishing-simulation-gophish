@@ -34,6 +34,7 @@ Clone & build GoPhish:
 git clone https://github.com/gophish/gophish.git
 cd gophish
 go build
+
 📬 Mailgun SMTP Setup
 Register a domain and configure DNS (TXT, MX, CNAME) records.
 
